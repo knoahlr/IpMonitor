@@ -17,13 +17,21 @@ if __name__ == "__main__":
     logFile = open(Path(r"../logs/mainLog.log"), 'w')
     # sys.stdout = logFile
 
-    myEmail = "knoah.lr@gmail.com"
-    myPassword = "xsltglhjhewyywat" 
+    # Mongo Client
+    client = MongoClient()
+
+    localDatabase = client.local
+
+    #get gmail login information from local collection
+    loginCollection = localDatabase['login']
+
+    gmailList = list(loginCollection.find({"name":"gmail"}))
+    myEmail = gmailList[0]['username']
+    myPassword = gmailList[0]['password']
+
     to = ["noahlangat@cmail.carleton.ca"]
 
-    #urllib.request.urlopen('https://ident.me').read().decode('utf8')
-
-    """ Email Message """
+    #Email Message
     msg = EmailMessage()
     msg['Subject'] = "IP Address Change"
     msg['From'] = myEmail
@@ -32,10 +40,8 @@ if __name__ == "__main__":
     
     newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
-    ''' MongoDB IP database '''
-    client = MongoClient()
-    localDatabase = client.local
-
+    #MongoDB IP database '''
+ 
     ipCollection = client.local['Ip']
     cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
     currentIP = list(cursor)[0]["IP"]
