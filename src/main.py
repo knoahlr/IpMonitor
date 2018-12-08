@@ -13,8 +13,8 @@ if __name__ == "__main__":
 
     if not Path(r"../logs").is_dir():
         os.makedirs(r"../logs")
-        
-    logFile = open(Path(r"../logs/mainLog.log"), 'w')
+    # ipObtained = False
+    # logFile = open(Path(r"../logs/mainLog.log"), 'a')
     # sys.stdout = logFile
 
     # Mongo Client
@@ -37,21 +37,46 @@ if __name__ == "__main__":
     msg['From'] = myEmail
     msg['To'] = "noahlangat@cmail.carleton.ca"
     
-    
-    newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
+    # while not ipObtained:
+    #     try:
+    #         newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
+    #         ipObtained = True
+    #     except Exception as e:
+    #         print(e, end='\n')
+    #         time.sleep(60)
+
 
     #MongoDB IP database '''
  
-    ipCollection = client.local['Ip']
-    cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
-    currentIP = list(cursor)[0]["IP"]
+    # ipCollection = client.local['Ip']
+    # cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
+    # currentIP = list(cursor)[0]["IP"]
 
     # print(currentIP)
+    # logFile.close()
 
     while True:
 
         
+        logFile = open(Path(r"../logs/mainLog.log"), 'a')
+        ipObtained = False
+        sys.stdout = logFile
 
+        ipCollection = client.local['Ip']
+        cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
+        currentIP = list(cursor)[0]["IP"]
+
+        while not ipObtained:
+            try:
+                newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
+                # print("IP as of now is:{0}".format(newIP))
+                ipObtained = True
+            except Exception as e:
+                print(e, end='\n')
+                time.sleep(60)
+
+
+        
         if currentIP != newIP:
 
             print("Ip has changed from {0} to {1}".format(currentIP, newIP))
@@ -60,6 +85,7 @@ if __name__ == "__main__":
                 "datetime": time.mktime(datetime.datetime.now().timetuple()) * 1000
             }
             result = ipCollection.insert_one(ip)
+            
             try:
                 server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
                 server.ehlo()
@@ -72,8 +98,25 @@ if __name__ == "__main__":
 
             finally:
                 server.quit()
-        cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
-        currentIP = list(cursor)[0]["IP"]
-        newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
 
-        time.sleep(14400)
+
+
+        ''' WAIT FOR 1 HOUR HOURS BEFORE CHECKING AGAIN '''
+        logFile.close()
+        time.sleep(3600)
+        
+        # cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
+        # currentIP = list(cursor)[0]["IP"]
+
+        # while not ipObtained:
+        #     try:
+        #         newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
+        #         ipObtained = True
+        #     except Exception as e:
+        #         print(e, end='\n')
+        #         time.sleep(60)
+        
+        
+
+
+    
