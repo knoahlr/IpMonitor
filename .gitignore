@@ -1,6 +1,7 @@
 
 #My Logs folder
 logs/mainLog.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
