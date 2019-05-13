@@ -6,8 +6,9 @@ from email.message import EmailMessage
 
 from pathlib import Path
 from pymongo import MongoClient
-
-
+from boto import dynamodb2
+from boto.dynamodb2.table import Table
+from boto3 import resource
 
 if __name__ == "__main__":
 
@@ -25,9 +26,21 @@ if __name__ == "__main__":
     #get gmail login information from local collection
     loginCollection = localDatabase['login']
 
-    gmailList = list(loginCollection.find({"name":"gmail"}))
-    myEmail = gmailList[0]['username']
-    myPassword = gmailList[0]['password']
+    
+
+
+    #Obtaining AWS access and secret Keys
+
+    awsList = list(loginCollection.find({"name":"access"}))
+    accessKey = awsList[0]['access_key']
+    secretKey = awsList[0]['secret_access_key']
+
+    #Initiating AWS connection
+    session = boto3.Session(aws_access_key_id=settings.AWS_SERVER_PUBLIC_KEY, aws_secret_access_key=settings.AWS_SERVER_SECRET_KEY)
+    database = session.resource('dynamodb', region_name='us-east-2')
+    ipTable = database.Table('IpMonitor')
+    
+
 
     to = ["noahlangat@cmail.carleton.ca"]
 
@@ -37,27 +50,37 @@ if __name__ == "__main__":
     msg['From'] = myEmail
     msg['To'] = "noahlangat@cmail.carleton.ca"
     
-    # while not ipObtained:
-    #     try:
-    #         newIP = urllib.request.urlopen('https://ident.me').read().decode('utf8')
-    #         ipObtained = True
-    #     except Exception as e:
-    #         print(e, end='\n')
-    #         time.sleep(60)
 
-
-    #MongoDB IP database '''
- 
-    # ipCollection = client.local['Ip']
-    # cursor = ipCollection.find().sort([("datetime", -1)]).limit(1)
-    # currentIP = list(cursor)[0]["IP"]
-
-    # print(currentIP)
-    # logFile.close()
+    currentEpochTime = time.mktime(datetime.datetime.now().timetuple()) * 1000
 
     while True:
 
-        
+        #Obtaining current IP
+
+        ipList = ipTable.scan()
+        iPs = ipList['Items']
+        ipTimeDiff = currentEpochTime
+
+        for ip in iPs:
+
+            ipEpoch = ip['ipEpoch']
+            
+            if abs(currentEpochTime - ipEpoch) < ipTimeDiff:
+                currentIp = ip
+                ipTimeDiff = abs(currentEpochTime - ipEpoch)
+
+        currentIP = currentIp['Ip']
+
+
+
+
+
+
+
+
+
+
+
         logFile = open(Path(r"../logs/mainLog.log"), 'a')
         ipObtained = False
         sys.stdout = logFile
