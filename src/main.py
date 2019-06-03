@@ -40,6 +40,7 @@ class emailInfo(enum.Enum):
     to      = ['noahlangat@cmail.carleton.ca']
     ip      = queryIP()
     content = 'Ip Address changed to {0}'.format(queryIP())
+    port    = 465
 
 
 def isNumber(s):
@@ -138,7 +139,7 @@ def sendEmail(session):
     msg['To'] = emailInfo.to.value #"noahlangat@cmail.carleton.ca"
 
     try:
-        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server = smtplib.SMTP_SSL('smtp.gmail.com', emailInfo.port.value)
         server.ehlo()
         server.login(myEmail, myPassword)
         msg.set_content(emailInfo.content.value)
@@ -170,7 +171,7 @@ if __name__ == "__main__":
     if not Path(r"../logs").is_dir():
         os.makedirs(r"../logs")
     # ipObtained = False
-    logFile = open(Path(r"../logs/mainLog.log"), 'a')
+    logFile = open(Path(r"../logs/AWSLog.log"), 'a')
     sys.stdout = logFile
 
     sess = session()
@@ -209,6 +210,6 @@ if __name__ == "__main__":
 
         ''' WAIT FOR 1 HOUR BEFORE CHECKING AGAIN '''
         logFile.close()
-        time.sleep(3600)
+        time.sleep(10)
       
         
